@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>도서관 한방 검색 - 섹션 확장형</title>
+    <style>
+        body { font-family: sans-serif; padding: 10px; margin: 0; }
+        .search-box { margin-bottom: 20px; text-align: center; }
+        #keyword { width: 400px; padding: 10px; font-size: 16px; border: 1px solid #ccc; }
+        #keyword-multi { width: 400px; height: 100px; padding: 10px; font-size: 16px; border: 1px solid #ccc; display: none; }
+        .toggle-btn { cursor: pointer; color: blue; text-decoration: underline; background: none; border: none; }
+        
+        .result-set { border-top: 3px solid #333; margin-top: 20px; padding-top: 10px; }
+        .result-title { font-size: 20px; font-weight: bold; color: #d32f2f; margin-bottom: 10px; }
+        
+        .link-bar { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; }
+        .link-bar a { padding: 8px 16px; background-color: #f0f0f0; border: 1px solid #ddd; text-decoration: none; color: #333; font-weight: bold; border-radius: 4px; }
+        
+        .frame-container { display: flex; gap: 10px; height: 400px; margin-bottom: 30px; }
+        .frame-wrapper { flex: 1; display: flex; flex-direction: column; }
+        iframe { flex: 1; border: 2px solid #ddd; width: 100%; }
+        h3 { text-align: center; margin: 5px 0; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="search-box">
+        <div id="input-area">
+            <input type="text" id="keyword" placeholder="책 제목 입력" onkeydown="if(event.key==='Enter') search()">
+            <textarea id="keyword-multi" placeholder="책 제목을 줄바꿈하여 입력하세요"></textarea>
+        </div>
+        <button class="toggle-btn" id="toggle-btn" onclick="toggleMode()">여러 줄 입력으로 전환</button>
+        <button onclick="search()">검색 실행</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        let isMultiLine = false;
+
+        function toggleMode() {
+            const single = document.getElementById('keyword');
+            const multi = document.getElementById('keyword-multi');
+            const btn = document.getElementById('toggle-btn');
+            isMultiLine = !isMultiLine;
+            single.style.display = isMultiLine ? 'none' : 'inline-block';
+            multi.style.display = isMultiLine ? 'inline-block' : 'none';
+            btn.innerText = isMultiLine ? "한 줄 입력으로 전환" : "여러 줄 입력으로 전환";
+        }
+
+        function search() {
+            const input = isMultiLine ? document.getElementById('keyword-multi').value : document.getElementById('keyword').value;
+            
+            // 핵심 수정: .split('\n') 이후 .filter로 빈 줄 및 공백 줄 완전히 제거
+            const keywords = input.split('\n')
+                                  .map(k => k.trim())
+                                  .filter(k => k !== "");
+            
+            const container = document.getElementById('results');
+            container.innerHTML = '';
+
+            keywords.forEach(k => {
+                const enc = encodeURIComponent(k);
+                const div = document.createElement('div');
+                div.className = 'result-set';
+                div.innerHTML = `
+                    <div class="result-title"># "${k}" 검색 결과</div>
+                    <div class="link-bar">
+                        <a href="https://lib.yongin.go.kr/intro/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=ALL&searchKeyword=${enc}" target="_blank">용인 도서관 검색결과</a>
+                        <a href="https://mob.suwonlib.go.kr/search?searchTxt=${enc}&searchKind=book&orderbyItem=TITLE_INFO_SORT&orderby=ASC" target="_blank">수원 도서관 검색결과</a>
+                    </div>
+                    <div class="frame-container">
+                        <div class="frame-wrapper"><h3>경기사이버도서관</h3><iframe src="https://www.library.kr/ggl/search/search-list?search_text=${enc}"></iframe></div>
+                        <div class="frame-wrapper"><h3>성남시 도서관</h3><iframe src="https://www.snlib.go.kr/intro/menu/10041/program/30009/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=TITLE&searchKeyword=${enc}&searchPbLibrary=ALL"></iframe></div>
+                        <div class="frame-wrapper"><h3>느티나무 도서관</h3><iframe src="https://www.neutinamu.org/page/search/result.php?tsch=${enc}"></iframe></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
