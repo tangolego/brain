@@ -37,16 +37,29 @@
     <div id="results"></div>
 
     <script>
+        // 페이지 로드 시 검색창에 자동 포커스
+        window.onload = function() {
+            document.getElementById('keyword').focus();
+        };
+
         let isMultiLine = false;
 
         function toggleMode() {
             const single = document.getElementById('keyword');
             const multi = document.getElementById('keyword-multi');
             const btn = document.getElementById('toggle-btn');
+            
             isMultiLine = !isMultiLine;
             single.style.display = isMultiLine ? 'none' : 'inline-block';
             multi.style.display = isMultiLine ? 'inline-block' : 'none';
             btn.innerText = isMultiLine ? "한 줄 입력으로 전환" : "여러 줄 입력으로 전환";
+            
+            // 모드 전환 시 해당 입력창으로 포커스 자동 이동
+            if (isMultiLine) {
+                multi.focus();
+            } else {
+                single.focus();
+            }
         }
 
         // 특정 도서관 페이지를 여는 함수
