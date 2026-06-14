@@ -18,6 +18,7 @@
         
         .frame-container { display: flex; gap: 10px; height: 400px; margin-bottom: 30px; }
         .frame-wrapper { flex: 1; display: flex; flex-direction: column; }
+        .btn-open-new { font-size: 12px; margin-bottom: 5px; cursor: pointer; background: #eee; border: 1px solid #ccc; padding: 2px; text-align: center; }
         iframe { flex: 1; border: 2px solid #ddd; width: 100%; }
         h3 { text-align: center; margin: 5px 0; font-size: 14px; }
     </style>
@@ -47,19 +48,30 @@
             btn.innerText = isMultiLine ? "한 줄 입력으로 전환" : "여러 줄 입력으로 전환";
         }
 
+        function createFrame(title, url) {
+            return `
+                <div class="frame-wrapper">
+                    <h3>${title}</h3>
+                    <div class="btn-open-new" onclick="window.open('${url}', '_blank')">[새 창에서 열기]</div>
+                    <iframe src="${url}"></iframe>
+                </div>
+            `;
+        }
+
         function search() {
             const input = isMultiLine ? document.getElementById('keyword-multi').value : document.getElementById('keyword').value;
-            
-            // 핵심 수정: .split('\n') 이후 .filter로 빈 줄 및 공백 줄 완전히 제거
-            const keywords = input.split('\n')
-                                  .map(k => k.trim())
-                                  .filter(k => k !== "");
-            
+            const keywords = input.split('\n').map(k => k.trim()).filter(k => k !== "");
             const container = document.getElementById('results');
             container.innerHTML = '';
 
             keywords.forEach(k => {
                 const enc = encodeURIComponent(k);
+                const urls = {
+                    gg: `https://www.library.kr/ggl/search/search-list?search_text=${enc}`,
+                    sn: `https://www.snlib.go.kr/intro/menu/10041/program/30009/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=TITLE&searchKeyword=${enc}&searchPbLibrary=ALL`,
+                    nt: `https://www.neutinamu.org/page/search/result.php?tsch=${enc}`
+                };
+
                 const div = document.createElement('div');
                 div.className = 'result-set';
                 div.innerHTML = `
@@ -69,9 +81,9 @@
                         <a href="https://mob.suwonlib.go.kr/search?searchTxt=${enc}&searchKind=book&orderbyItem=TITLE_INFO_SORT&orderby=ASC" target="_blank">수원 도서관 검색결과</a>
                     </div>
                     <div class="frame-container">
-                        <div class="frame-wrapper"><h3>경기사이버도서관</h3><iframe src="https://www.library.kr/ggl/search/search-list?search_text=${enc}"></iframe></div>
-                        <div class="frame-wrapper"><h3>성남시 도서관</h3><iframe src="https://www.snlib.go.kr/intro/menu/10041/program/30009/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=TITLE&searchKeyword=${enc}&searchPbLibrary=ALL"></iframe></div>
-                        <div class="frame-wrapper"><h3>느티나무 도서관</h3><iframe src="https://www.neutinamu.org/page/search/result.php?tsch=${enc}"></iframe></div>
+                        ${createFrame("경기사이버도서관", urls.gg)}
+                        ${createFrame("성남시 도서관", urls.sn)}
+                        ${createFrame("느티나무 도서관", urls.nt)}
                     </div>
                 `;
                 container.appendChild(div);
