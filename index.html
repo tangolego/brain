@@ -91,11 +91,12 @@
             
             const manageCodes = "141025,141024,141549,141572,141552,141093,141542,141092,141537,141557,141551,141301,141595,141596,141612,141085,141086,141064,141138,341147,141107";
             
-            keywords.forEach(k => {
+            keywords.forEach((k, i) => {
                 const enc = encodeURIComponent(k.trim());
                 const yonginUrl = `https://lib.yongin.go.kr/intro/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=ALL&searchKeyword=${enc}`;
                 const suwonUrl = `https://mob.suwonlib.go.kr/search?historyChk=Y&isSearchType=normal&searchTxt=${enc}&searchKind=book&manageCode=${manageCodes}&orderbyItem=ACCURACY_SORT&orderby=DESC&pageNo=1`;
-                
+                const gglUrl = `https://www.library.kr/ggl/search/search-list?search_text=${enc}`;
+
                 const div = document.createElement('div');
                 div.className = 'result-set';
                 div.innerHTML = `
@@ -107,10 +108,16 @@
                     <div class="frame-container">
                         <iframe src="https://www.neutinamu.org/page/search/result.php?tsch=${enc}"></iframe>
                         <iframe src="https://www.snlib.go.kr/intro/menu/10041/program/30009/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=TITLE&searchKeyword=${enc}&searchPbLibrary=ALL"></iframe>
-                        <iframe src="https://www.library.kr/ggl/search/search-list?search_text=${enc}"></iframe>
+                        <iframe id="ggl-${i}" data-src="${gglUrl}"></iframe>
                     </div>
                 `;
                 container.appendChild(div);
+
+                // 경기도서관은 세션 기반이라 순차적으로 로드해야 마지막 키워드 덮어쓰기 방지
+                setTimeout(() => {
+                    const gglFrame = document.getElementById(`ggl-${i}`);
+                    if (gglFrame) gglFrame.src = gglFrame.dataset.src;
+                }, i * 800);
             });
         }
     </script>
