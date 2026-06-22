@@ -3,126 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>도서관 한방 검색 - 섹션 확장형</title>
+    <title>도서관 한방 검색</title>
     <style>
-        :root { --bg: #fff; --text: #000; --border: #ccc; }
-        @media (prefers-color-scheme: dark) {
-            :root { --bg: #121212; --text: #eee; --border: #444; }
+        :root { 
+            --bg: #f2f4f6; --white: #ffffff; --text: #191f24; 
+            --text-sub: #4e5968; --accent: #3182f6; --border: #e8eaed; 
         }
-        body { font-family: sans-serif; padding: 10px; margin: 0; background: var(--bg); color: var(--text); }
-        .search-box { margin-bottom: 20px; text-align: center; }
-        #keyword, #keyword-multi { width: 400px; max-width: 100%; padding: 10px; font-size: 16px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
-        #keyword-multi { height: 100px; display: none; }
-        .toggle-btn { cursor: pointer; color: #2196f3; text-decoration: underline; background: none; border: none; }
-        .result-set { border-top: 3px solid var(--border); margin-top: 20px; padding-top: 10px; }
-        .result-title { font-size: 20px; font-weight: bold; color: #d32f2f; margin-bottom: 10px; }
-        .btn-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-        .btn-bar button { padding: 6px 12px; cursor: pointer; background: #e0f7fa; border: 1px solid #00acc1; border-radius: 4px; font-weight: bold; }
-        .frame-container { display: flex; gap: 10px; height: 400px; margin-bottom: 30px; flex-direction: column; }
-        @media (min-width: 768px) { .frame-container { flex-direction: row; } }
-        .frame-wrapper { flex: 1; display: flex; flex-direction: column; }
-        .btn-open-new { font-size: 12px; margin-bottom: 5px; cursor: pointer; background: #eee; border: 1px solid #ccc; padding: 2px; text-align: center; color: #000; }
-        iframe { flex: 1; border: 2px solid var(--border); width: 100%; }
-        h3 { text-align: center; margin: 5px 0; font-size: 14px; }
-        #history-bar { margin-top: 10px; font-size: 14px; }
-        #history-bar span { cursor: pointer; color: #2196f3; margin: 0 5px; text-decoration: underline; }
+        
+        /* 다크모드 대응 */
+        @media (prefers-color-scheme: dark) {
+            :root { 
+                --bg: #121212; --white: #1e1e1e; --text: #f0f0f0; 
+                --text-sub: #a0a0a0; --accent: #4d94ff; --border: #333333; 
+            }
+        }
+        
+        body { 
+            padding: 20px; margin: 0; background: var(--bg); color: var(--text); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        }
+        
+        .help-msg { 
+            text-align: center; font-size: 14px; color: var(--text-sub); margin-bottom: 24px; 
+            padding: 16px; background: var(--white); border-radius: 16px; 
+        }
+        
+        .search-container { display: flex; gap: 8px; justify-content: center; max-width: 640px; margin: 0 auto; }
+        textarea { 
+            flex: 1; height: 100px; padding: 16px; border: 1px solid var(--border); 
+            border-radius: 16px; background: var(--white); color: var(--text); outline: none; resize: none;
+        }
+        .search-btn { 
+            padding: 0 24px; background: var(--accent); color: white; border: none; 
+            border-radius: 16px; cursor: pointer; font-weight: 600;
+        }
+
+        .result-set { 
+            padding: 24px; margin-top: 24px; border-radius: 20px; 
+            background: var(--white);
+        }
+        .top-link-bar { display: flex; gap: 16px; margin-bottom: 20px; justify-content: center; }
+        .top-link-bar a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        
+        .frame-container { display: flex; gap: 12px; height: 400px; margin-top: 16px; }
+        iframe { flex: 1; border: 1px solid var(--border); border-radius: 12px; width: 100%; height: 350px; background: #fff; }
+
+        /* 모바일 세로모드 */
+        @media (max-width: 767px) {
+            .help-msg { display: none; }
+            .search-container { flex-direction: column; }
+            .frame-container { flex-direction: column; height: 3000px; }
+            iframe { height: 1000px; }
+        }
+
+        /* 모바일 가로모드 대응 */
+        @media (min-width: 480px) and (max-width: 900px) and (orientation: landscape) {
+            .frame-container { height: 1500px; }
+            iframe { height: 500px; }
+        }
     </style>
 </head>
 <body>
-    <div class="search-box">
-        <div id="input-area">
-            <input type="text" id="keyword" placeholder="책 제목 입력" onkeydown="if(event.key==='Enter') search()">
-            <textarea id="keyword-multi" placeholder="책 제목을 줄바꿈하여 입력하세요"></textarea>
-        </div>
-        <button class="toggle-btn" id="toggle-btn" onclick="toggleMode()">여러 줄 입력으로 전환</button>
-        <button onclick="search()">검색 실행</button>
-        <div id="history-bar">최근 검색: </div>
+    <div class="help-msg">
+        💡 <b>검색 안내</b>: 줄바꿈은 <b>Enter</b> | 검색 실행은 <b>Shift/Ctrl/Alt/Cmd + Enter</b> 또는 우측 <b>검색 버튼</b>
+    </div>
+
+    <div class="search-container">
+        <textarea id="keyword" placeholder="책 제목을 입력하세요" onkeydown="handleKey(event)"></textarea>
+        <button class="search-btn" onclick="search()">검색</button>
     </div>
 
     <div id="results"></div>
 
     <script>
-        let isMultiLine = false;
-        const HISTORY_KEY = 'lib_search_history';
-
-        // 페이지 로드 시 히스토리 표시
-        window.onload = updateHistoryUI;
-
-        function toggleMode() {
-            const single = document.getElementById('keyword');
-            const multi = document.getElementById('keyword-multi');
-            const btn = document.getElementById('toggle-btn');
-            isMultiLine = !isMultiLine;
-            single.style.display = isMultiLine ? 'none' : 'inline-block';
-            multi.style.display = isMultiLine ? 'inline-block' : 'none';
-            btn.innerText = isMultiLine ? "한 줄 입력으로 전환" : "여러 줄 입력으로 전환";
-        }
-
-        function updateHistoryUI() {
-            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-            const bar = document.getElementById('history-bar');
-            bar.innerHTML = '최근 검색: ' + history.map(k => `<span onclick="runQuickSearch('${k}')">${k}</span>`).join(' | ');
-        }
-
-        function runQuickSearch(k) {
-            document.getElementById('keyword').value = k;
-            if(isMultiLine) toggleMode();
-            search();
-        }
-
-        function openLibrary(type, enc) {
-            const manageCodes = "141025,141024,141549,141572,141552,141093,141542,141092,141537,141557,141551,141301,141595,141596,141612,141085,141086,141064,141138,341147,141107";
-            let url = "";
-            if (type === 'yongin') {
-                url = `https://lib.yongin.go.kr/intro/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=ALL&searchKeyword=${enc}`;
-            } else if (type === 'suwon') {
-                url = `https://mob.suwonlib.go.kr/search?historyChk=Y&isSearchType=normal&searchTxt=${decodeURIComponent(enc)}&searchKind=book&manageCode=${manageCodes}&orderbyItem=ACCURACY_SORT&orderby=DESC&pageNo=1`;
+        function handleKey(e) {
+            if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey)) {
+                e.preventDefault();
+                search();
             }
-            if (url) window.open(url, '_blank');
-        }
-
-        function createFrame(title, url) {
-            return `
-                <div class="frame-wrapper">
-                    <h3>${title}</h3>
-                    <div class="btn-open-new" onclick="window.open('${url}', '_blank')">[새 창에서 열기]</div>
-                    <iframe src="${url}"></iframe>
-                </div>
-            `;
         }
 
         function search() {
-            const input = isMultiLine ? document.getElementById('keyword-multi').value : document.getElementById('keyword').value;
-            const keywords = input.split('\n').map(k => k.trim()).filter(k => k !== "");
-            if(keywords.length === 0) return;
-
-            // 히스토리 저장
-            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-            history = [keywords[0], ...history.filter(k => k !== keywords[0])].slice(0, 5);
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-            updateHistoryUI();
-
+            const input = document.getElementById('keyword').value;
+            const keywords = input.split('\n').filter(k => k.trim() !== "");
             const container = document.getElementById('results');
             container.innerHTML = '';
+            
+            const manageCodes = "141025,141024,141549,141572,141552,141093,141542,141092,141537,141557,141551,141301,141595,141596,141612,141085,141086,141064,141138,341147,141107";
+            
             keywords.forEach(k => {
-                const enc = encodeURIComponent(k);
-                const urls = {
-                    gg: `https://www.library.kr/ggl/search/search-list?search_text=${enc}`,
-                    sn: `https://www.snlib.go.kr/intro/menu/10041/program/30009/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=TITLE&searchKeyword=${enc}&searchPbLibrary=ALL`,
-                    nt: `https://www.neutinamu.org/page/search/result.php?tsch=${enc}`
-                };
+                const enc = encodeURIComponent(k.trim());
+                const yonginUrl = `https://lib.yongin.go.kr/intro/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=ALL&searchKeyword=${enc}`;
+                const suwonUrl = `https://mob.suwonlib.go.kr/search?historyChk=Y&isSearchType=normal&searchTxt=${enc}&searchKind=book&manageCode=${manageCodes}&orderbyItem=ACCURACY_SORT&orderby=DESC&pageNo=1`;
+                
                 const div = document.createElement('div');
                 div.className = 'result-set';
                 div.innerHTML = `
-                    <div class="result-title"># "${k}" 검색 결과</div>
-                    <div class="btn-bar">
-                        <button onclick="openLibrary('yongin', '${enc}')">용인시 도서관 검색결과</button>
-                        <button onclick="openLibrary('suwon', '${enc}')">수원시 도서관 검색결과</button>
+                    <div style="font-weight: 700; margin-bottom: 8px;">"${k.trim()}" 검색 결과</div>
+                    <div class="top-link-bar">
+                        <a href="${suwonUrl}" target="_blank">새 창에서 수원</a>
+                        <a href="${yonginUrl}" target="_blank">새 창에서 용인</a>
                     </div>
                     <div class="frame-container">
-                        ${createFrame("경기사이버도서관", urls.gg)}
-                        ${createFrame("성남시 도서관", urls.sn)}
-                        ${createFrame("느티나무 도서관", urls.nt)}
+                        <iframe src="https://www.neutinamu.org/page/search/result.php?tsch=${enc}"></iframe>
+                        <iframe src="https://www.snlib.go.kr/intro/menu/10041/program/30009/plusSearchResultList.do?searchType=SIMPLE&searchCategory=BOOK&searchKey=TITLE&searchKeyword=${enc}&searchPbLibrary=ALL"></iframe>
+                        <iframe src="https://www.library.kr/ggl/search/search-list?search_text=${enc}"></iframe>
                     </div>
                 `;
                 container.appendChild(div);
