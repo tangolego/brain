@@ -112,13 +112,24 @@
                     </div>
                 `;
                 container.appendChild(div);
-
-                // 경기도서관은 세션 기반이라 순차적으로 로드해야 마지막 키워드 덮어쓰기 방지
-                setTimeout(() => {
-                    const gglFrame = document.getElementById(`ggl-${i}`);
-                    if (gglFrame) gglFrame.src = gglFrame.dataset.src;
-                }, i * 800);
             });
+
+            // 경기도서관은 세션 기반 → onload 체인으로 순차 로드 (타이밍 경쟁 방지)
+            // src 세팅 시 about:blank → 목적지 URL 순으로 onload가 2번 발화하므로
+            // fired 플래그로 첫 번째 발화만 사용
+            function loadGglChain(index) {
+                if (index >= keywords.length) return;
+                const frame = document.getElementById(`ggl-${index}`);
+                if (!frame) return;
+                let fired = false;
+                frame.onload = () => {
+                    if (fired) return;
+                    fired = true;
+                    setTimeout(() => loadGglChain(index + 1), 300);
+                };
+                frame.src = frame.dataset.src;
+            }
+            loadGglChain(0);
         }
     </script>
 </body>
