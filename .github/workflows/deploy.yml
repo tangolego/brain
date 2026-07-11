@@ -22,4 +22,5 @@ jobs:
             --region asia-northeast3 \
             --platform managed \
             --allow-unauthenticated \
-            --clear-base-image
+            --clear-base-image \
+            --set-secrets=/app/cookies.txt=yt2mp3-cookies:latest
