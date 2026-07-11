@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import yt_dlp
 import os
+import subprocess
 
 app = Flask(__name__)
 DOWNLOAD_PATH = './downloads'
@@ -20,6 +21,14 @@ def download_mp3(url):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/check-ffmpeg')
+def check_ffmpeg():
+    try:
+        result = subprocess.run(['ffmpeg', '-version'], capture_output=True, text=True)
+        return f"<pre>{result.stdout}</pre>"
+    except FileNotFoundError:
+        return "ffmpeg NOT FOUND", 500
 
 @app.route('/convert', methods=['POST'])
 def convert():
