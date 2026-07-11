@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Downloader Pro</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; line-height: 1.6; }
+        .input-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        input { flex: 1; padding: 8px; }
+        .btn-x { background: #ff4d4d; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+        .result-item { display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 5px; }
+        .result-item:hover { background: #f0f0f0; }
+        .result-item img { width: 80px; height: 45px; margin-right: 10px; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <h1>유튜브 MP3 변환기</h1>
+    
+    <div style="display: flex; gap: 5px; margin-bottom: 20px;">
+        <input type="text" id="query" placeholder="검색어 입력 (Enter로 검색)" onkeydown="if(event.key==='Enter') searchVideo()">
+        <button onclick="searchVideo()">검색</button>
+    </div>
+
+    <h3>변환할 원본 URL (5개)</h3>
+    <div id="urlInputs">
+        <div class="input-row"><input type="text" class="url-field" placeholder="URL 1"><button class="btn-x" onclick="clearRow(this)">X</button></div>
+        <div class="input-row"><input type="text" class="url-field" placeholder="URL 2"><button class="btn-x" onclick="clearRow(this)">X</button></div>
+        <div class="input-row"><input type="text" class="url-field" placeholder="URL 3"><button class="btn-x" onclick="clearRow(this)">X</button></div>
+        <div class="input-row"><input type="text" class="url-field" placeholder="URL 4"><button class="btn-x" onclick="clearRow(this)">X</button></div>
+        <div class="input-row"><input type="text" class="url-field" placeholder="URL 5"><button class="btn-x" onclick="clearRow(this)">X</button></div>
+    </div>
+    <button onclick="convertAll()" style="width: 100%; margin-top: 10px; padding: 15px; background: #3182f6; color: white; border: none; font-weight: bold; cursor: pointer;">Shift + Enter로 변환 시작</button>
+
+    <div id="results"></div>
+
+    <script>
+        // Shift + Enter 단축키
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.shiftKey) {
+                e.preventDefault();
+                convertAll();
+            }
+        });
+
+        async function searchVideo() {
+            const query = document.getElementById('query').value;
+            const resDiv = document.getElementById('results');
+            resDiv.innerHTML = "검색 중...";
+            const res = await fetch('/search', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query}) });
+            const videos = await res.json();
+            
+            resDiv.innerHTML = "<h3>결과를 선택하세요:</h3>";
+            videos.forEach(v => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `<img src="${v.thumbnail}"> <span>${v.title}</span>`;
+                div.onclick = () => fillNextEmpty(v.url);
+                resDiv.appendChild(div);
+            });
+        }
+
+        function fillNextEmpty(url) {
+            const inputs = document.querySelectorAll('.url-field');
+            for (let input of inputs) {
+                if (input.value === "") {
+                    input.value = url;
+                    input.focus();
+                    return; // 하나 채우면 종료
+                }
+            }
+            alert("입력창이 꽉 찼습니다!");
+        }
+
+        function clearRow(btn) { btn.previousElementSibling.value = ""; }
+
+        async function convertAll() {
+            const inputs = document.querySelectorAll('.url-field');
+            const urls = Array.from(inputs).map(i => i.value).filter(v => v !== "");
+            if (urls.length === 0) { alert("URL을 입력해 주세요."); return; }
+            
+            alert("변환 시작: " + urls.length + "개");
+            const res = await fetch('/download', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({urls}) });
+            const data = await res.json();
+            alert(data.status === 'success' ? data.message : "오류: " + data.message);
+        }
+    </script>
+</body>
+</html>
