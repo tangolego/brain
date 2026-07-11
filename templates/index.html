@@ -10,7 +10,6 @@
             --text-sub: #4e5968; --accent: #3182f6; --border: #e8eaed; 
         }
         
-        /* 다크모드 대응 */
         @media (prefers-color-scheme: dark) {
             :root { 
                 --bg: #121212; --white: #1e1e1e; --text: #f0f0f0; 
@@ -44,13 +43,16 @@
             max-width: 640px; margin: 24px auto; padding: 24px; border-radius: 20px;
             background: var(--white); text-align: center;
         }
+
+        .error-msg { color: #ff6b6b; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div class="help-msg">
         💡 <b>사용 안내</b>: 유튜브 URL을 줄바꿈하여 여러 개 입력하세요.<br>
-        실행은 <b>Shift + Enter</b> 또는 우측 <b>변환 시작</b> 버튼
+        실행은 <b>Shift + Enter</b> 또는 우측 <b>변환 시작</b> 버튼<br>
+        변환이 끝나면 모든 mp3가 zip 파일로 한 번에 다운로드됩니다.
     </div>
 
     <div class="search-container">
@@ -61,7 +63,6 @@
     <div id="results">결과가 여기에 표시됩니다.</div>
 
     <script>
-        // Shift + Enter 단축키 기능
         function handleKey(e) {
             if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey)) {
                 e.preventDefault();
@@ -73,13 +74,13 @@
             const input = document.getElementById('urlInput').value;
             const urls = input.split('\n').filter(u => u.trim() !== "");
             const container = document.getElementById('results');
-            
+
             if (urls.length === 0) {
                 alert("URL을 하나 이상 입력해 주세요.");
                 return;
             }
 
-            container.innerHTML = '<div>변환 중입니다... (영상 길이에 따라 시간이 걸릴 수 있습니다)</div>';
+            container.innerHTML = '<div>⏳ 변환 중입니다... (개수와 길이에 따라 시간이 걸릴 수 있습니다)</div>';
 
             try {
                 const response = await fetch('/convert', {
@@ -87,14 +88,26 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ urls: urls })
                 });
-                
-                const data = await response.json();
-                
-                // 결과 표시
-                container.innerHTML = '<div>✅ 변환이 완료되었습니다! downloads 폴더를 확인하세요.</div>';
-                console.log(data); // 디버깅용
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    container.innerHTML = `<div class="error-msg">❌ ${err.error || '변환 실패'}</div>`;
+                    return;
+                }
+
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = 'converted_mp3.zip';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+
+                container.innerHTML = '<div>✅ 변환 완료! zip 파일이 다운로드되었습니다.</div>';
             } catch (error) {
-                container.innerHTML = '<div>❌ 오류가 발생했습니다. 서버 상태를 확인하세요.</div>';
+                container.innerHTML = '<div class="error-msg">❌ 오류가 발생했습니다. 서버 상태를 확인하세요.</div>';
                 console.error(error);
             }
         }
