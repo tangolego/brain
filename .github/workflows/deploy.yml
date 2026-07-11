@@ -23,4 +23,4 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --clear-base-image \
-            --set-secrets=/app/cookies.txt=yt2mp3-cookies:latest
+            --set-secrets=/secrets/cookies.txt=yt2mp3-cookies:latest
