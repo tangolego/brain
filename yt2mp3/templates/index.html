@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유튜브 MP3 변환기</title>
+    <style>
+        :root { 
+            --bg: #f2f4f6; --white: #ffffff; --text: #191f24; 
+            --text-sub: #4e5968; --accent: #3182f6; --border: #e8eaed; 
+        }
+        
+        /* 다크모드 대응 */
+        @media (prefers-color-scheme: dark) {
+            :root { 
+                --bg: #121212; --white: #1e1e1e; --text: #f0f0f0; 
+                --text-sub: #a0a0a0; --accent: #4d94ff; --border: #333333; 
+            }
+        }
+        
+        body { 
+            padding: 20px; margin: 0; background: var(--bg); color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        }
+        
+        .help-msg { 
+            text-align: center; font-size: 14px; color: var(--text-sub); margin-bottom: 24px;
+            padding: 16px; background: var(--white); border-radius: 16px;
+        }
+        
+        .search-container { display: flex; gap: 8px; justify-content: center; max-width: 640px; margin: 0 auto; }
+        
+        textarea { 
+            flex: 1; height: 150px; padding: 16px; border: 1px solid var(--border);
+            border-radius: 16px; background: var(--white); color: var(--text); outline: none; resize: none;
+        }
+        
+        .search-btn { 
+            padding: 0 24px; background: var(--accent); color: white; border: none;
+            border-radius: 16px; cursor: pointer; font-weight: 600;
+        }
+        
+        #results { 
+            max-width: 640px; margin: 24px auto; padding: 24px; border-radius: 20px;
+            background: var(--white); text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="help-msg">
+        💡 <b>사용 안내</b>: 유튜브 URL을 줄바꿈하여 여러 개 입력하세요.<br>
+        실행은 <b>Shift + Enter</b> 또는 우측 <b>변환 시작</b> 버튼
+    </div>
+
+    <div class="search-container">
+        <textarea id="urlInput" placeholder="유튜브 URL을 줄바꿈으로 구분해 입력하세요" onkeydown="handleKey(event)"></textarea>
+        <button class="search-btn" onclick="startConversion()">변환 시작</button>
+    </div>
+
+    <div id="results">결과가 여기에 표시됩니다.</div>
+
+    <script>
+        // Shift + Enter 단축키 기능
+        function handleKey(e) {
+            if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey)) {
+                e.preventDefault();
+                startConversion();
+            }
+        }
+
+        async function startConversion() {
+            const input = document.getElementById('urlInput').value;
+            const urls = input.split('\n').filter(u => u.trim() !== "");
+            const container = document.getElementById('results');
+            
+            if (urls.length === 0) {
+                alert("URL을 하나 이상 입력해 주세요.");
+                return;
+            }
+
+            container.innerHTML = '<div>변환 중입니다... (영상 길이에 따라 시간이 걸릴 수 있습니다)</div>';
+
+            try {
+                const response = await fetch('/convert', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ urls: urls })
+                });
+                
+                const data = await response.json();
+                
+                // 결과 표시
+                container.innerHTML = '<div>✅ 변환이 완료되었습니다! downloads 폴더를 확인하세요.</div>';
+                console.log(data); // 디버깅용
+            } catch (error) {
+                container.innerHTML = '<div>❌ 오류가 발생했습니다. 서버 상태를 확인하세요.</div>';
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
