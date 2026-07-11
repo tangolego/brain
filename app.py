@@ -7,6 +7,7 @@ import zipfile
 
 app = Flask(__name__)
 DOWNLOAD_PATH = '/tmp/downloads'
+COOKIES_PATH = '/app/cookies.txt'
 
 if not os.path.exists(DOWNLOAD_PATH):
     os.makedirs(DOWNLOAD_PATH)
@@ -23,6 +24,10 @@ def download_mp3(url, session_dir):
         'outtmpl': os.path.join(session_dir, '%(title)s.%(ext)s'),
         'noplaylist': True,
     }
+
+    if os.path.exists(COOKIES_PATH):
+        ydl_opts['cookiefile'] = COOKIES_PATH
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         return info.get('title', 'audio')
