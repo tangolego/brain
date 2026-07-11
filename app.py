@@ -7,7 +7,7 @@ import zipfile
 
 app = Flask(__name__)
 DOWNLOAD_PATH = '/tmp/downloads'
-COOKIES_PATH = '/app/cookies.txt'
+COOKIES_PATH = '/secrets/cookies.txt'
 
 if not os.path.exists(DOWNLOAD_PATH):
     os.makedirs(DOWNLOAD_PATH)
